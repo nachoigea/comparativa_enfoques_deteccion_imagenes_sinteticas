@@ -1,6 +1,6 @@
 # Detección de Imágenes Generadas por IA mediante Deep Learning
 
-Trabajo de Fin de Máster (TFM) — Comparativa de paradigmas supervisados y no supervisados para la clasificación binaria de imágenes reales vs. generadas por inteligencia artificial.
+Trabajo de Fin de Máster (TFM) — Comparativa de paradigmas supervisados de clasificación binaria y no supervisados de detección de anomalías para la clasificación de imágenes reales vs. generadas por inteligencia artificial.
 
 ---
 
@@ -17,7 +17,7 @@ Se exploran dos paradigmas principales:
 
 ## Dataset
 
-El dataset utilizado contiene aproximadamente 50 000–60 000 imágenes organizadas en la siguiente estructura:
+El dataset utilizado contiene 60 000 imágenes organizadas en la siguiente estructura:
 
 ```
 dataset/
