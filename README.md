@@ -31,7 +31,7 @@ dataset/
 
 Las imágenes se redimensionan a **224 × 224 px** (modelos Keras/TF) o **256 × 256 px** (modelos PyTorch/VAE).
 
-> **Nota metodológica**: el dataset procede de Kaggle (tristanzhang32, *AI Generated Images vs Real Images*) y carece de documentación metodológica indexada en publicaciones científicas. Esta limitación se señala explícitamente en la memoria del TFM, contrastándola con datasets mejor documentados como CIFAKE (Bird & Lotfi, 2024, *IEEE Access*).
+> **Nota metodológica**: el dataset procede de Kaggle (tristanzhang32, *AI Generated Images vs Real Images*) 
 
 ---
 
@@ -41,13 +41,13 @@ Las imágenes se redimensionan a **224 × 224 px** (modelos Keras/TF) o **256 ×
 
 | Notebook | Modelo | Etapa |
 |---|---|---|
-| `class_cnn_preentrenada.ipynb` | EfficientNetB0 (frozen backbone) | Evaluación zero-shot / feature extraction |
+| `class_cnn_preentrenada.ipynb` | EfficientNetB0 (backbone congelado) | Evaluación zero-shot |
 | `class_cnn_finetuning.ipynb` | EfficientNetB0 (fine-tuning) | Ajuste fino sobre dataset |
 | `class_cnn_salida.ipynb` | EfficientNetB0 (solo capa de salida) | Entrenamiento únicamente del clasificador |
-| `class_cnn_vit_preentrenado.ipynb` | CNN (EfficientNetB0) + ViT Base 16×16 (frozen) | Híbrido CNN+ViT, evaluación inicial |
-| `class_cnn_vit_finetuning.ipynb` | CNN (EfficientNetB0) + ViT Base 16×16 (fine-tuning) | Ajuste fino del híbrido |
+| `class_cnn_vit_preentrenado.ipynb` | CNN (EfficientNetB0) + ViT Base 16×16 (congelado) | Híbrido CNN+ViT, evaluación inicial |
+| `class_cnn_vit_finetuning.ipynb` | CNN (EfficientNetB0) + ViT Base 16×16 (fine-tuning) | Ajuste fino del modelo híbrido |
 | `class_cnn_vit_salida.ipynb` | CNN (EfficientNetB0) + ViT Base 16×16 (solo salida) | Entrenamiento únicamente del clasificador |
-| `class_vit_preentrenado.ipynb` | ViT Base 16×16 (frozen) | Evaluación zero-shot |
+| `class_vit_preentrenado.ipynb` | ViT Base 16×16 (congelado) | Evaluación zero-shot |
 | `class_vit_finetuning.ipynb` | ViT Base 16×16 (fine-tuning) | Ajuste fino completo |
 | `class_vit_salida.ipynb` | ViT Base 16×16 (solo salida) | Entrenamiento únicamente del clasificador |
 
@@ -55,7 +55,7 @@ Las imágenes se redimensionan a **224 × 224 px** (modelos Keras/TF) o **256 ×
 
 | Notebook | Modelo | Enfoque |
 |---|---|---|
-| `vae_pretrained.ipynb` | VAE preentrenado (`REPA-E/e2e-invae-hf`) | Error en espacio latente (distancia de Mahalanobis simplificada) |
+| `vae_pretrained.ipynb` | VAE preentrenado (`REPA-E/e2e-invae-hf`) | Error MSE |
 | `vae_pretrained_finetuning.ipynb` | VAE preentrenado + fine-tuning del decoder | Error de reconstrucción píxel (MSE) |
 | `cnn_vae_pretrained.ipynb` | ResNet-50 (extractor de características) + VAE | Características CNN combinadas con error VAE |
 
@@ -65,15 +65,14 @@ Las imágenes se redimensionan a **224 × 224 px** (modelos Keras/TF) o **256 ×
 
 | Componente | Herramienta |
 |---|---|
-| Framework supervisado | TensorFlow 2.18 / Keras 3.x |
+| Framework supervisado | TensorFlow 2.18 / Keras 3.14.1 |
 | Framework VAE | PyTorch + HuggingFace `diffusers` |
 | Modelo VAE preentrenado | `REPA-E/e2e-invae-hf` (AutoencoderKL) |
 | Backbone supervisado | EfficientNetB0 (ImageNet), ViT Base 16×16 (via `keras-hub`) |
 | Backbone CNN-VAE | ResNet-50 (ImageNet V2, via `torchvision`) |
 | Métricas | scikit-learn: AUC-ROC, F1, accuracy, matriz de confusión |
-| Perceptual loss | `lpips` |
 | Visualización | matplotlib, seaborn |
-| Infraestructura | RunPod (RTX A6000 48 GB para PyTorch; RTX 4090 24 GB para TensorFlow) |
+| Infraestructura | RunPod (RTX 4090 24 GB) |
 
 ---
 
@@ -112,8 +111,8 @@ La métrica principal es el **AUC-ROC**, elegida por ser independiente del umbra
 
 Para los modelos VAE, la detección de anomalías se implementa comparando el error de reconstrucción de cada imagen contra un umbral óptimo calculado sobre el conjunto de validación. Se exploran dos señales de error:
 
-- **Error en espacio latente**: distancia de Mahalanobis simplificada sobre `mu` respecto a la distribución aprendida de imágenes reales.
-- **Error de reconstrucción píxel (MSE)**: diferencia cuadrática media entre imagen original y reconstruida; métrica válida para el VAE con fine-tuning del decoder (encoder congelado).
+- **Error en espacio latente**: distancia de Mahalanobis simplificada sobre `mu` respecto a la distribución aprendida de imágenes reales. Utilizado simplemente para ilustrar el impacto de diferentes métricas de error.
+- **Error de reconstrucción píxel (MSE)**: diferencia cuadrática media entre imagen original y reconstruida; métrica válida para el VAE con fine-tuning del decoder (encoder congelado). Métrica utilizada para la comparativa del impacto de los reentrenamientos
 
 ---
 
@@ -137,16 +136,6 @@ Para los modelos VAE, la detección de anomalías se implementa comparando el er
 
 ---
 
-## Hallazgos principales
-
-- Los modelos supervisados (EfficientNetB0, CNN+ViT) alcanzan AUC-ROC cercano a **0.98** tras fine-tuning, con rendimiento prácticamente idéntico entre arquitecturas.
-- Los modelos VAE de detección de anomalías obtienen AUC-ROC en el rango **0.60–0.71**, una brecha atribuida a la debilidad del MSE píxel como señal discriminativa para imágenes generadas por IA modernas, diseñadas para ser perceptualmente indistinguibles de fotografías reales.
-- La pérdida KL empuja todos los vectores `mu` hacia N(0, I), reduciendo el poder discriminativo de métricas basadas en espacio latente.
-- La comparación pretrained vs. fine-tuned sobre el VAE requiere métricas distintas: el error latente solo es válido cuando el encoder puede actualizarse; para el decoder fine-tuned con encoder congelado, el MSE píxel es la métrica correcta.
-- Los resultados negativos del paradigma no supervisado se interpretan como contribución analítica válida, ilustrando los límites estructurales de la detección de anomalías frente a generadores adversariales modernos.
-
----
-
 ## Referencia
 
-> Este repositorio forma parte del Trabajo de Fin de Máster en [nombre del Máster]. Los experimentos han sido ejecutados en infraestructura cloud GPU (RunPod) sobre un dataset privado no incluido en este repositorio.
+> Este repositorio forma parte del Trabajo de Fin de Máster en Desarrollo de Inteligencia Artificial. Los experimentos han sido ejecutados en infraestructura cloud GPU (RunPod) sobre un dataset privado no incluido en este repositorio.
